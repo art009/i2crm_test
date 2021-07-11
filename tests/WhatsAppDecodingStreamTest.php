@@ -10,11 +10,12 @@ class WhatsAppDecodingStreamTest extends TestCase
 {
 	/**
 	 * @dataProvider dataProvider
-	 * @param $encrypted
-	 * @param $key
-	 * @param $original
-	 * @param null $sidecar
-	 * @throws \Exception
+	 * @param string $encrypted
+	 * @param string $key
+	 * @param string $original
+	 * @param string $save_to
+	 * @param string $media_type
+	 * @param string|null $sidecar
 	 */
 	public function testWhatsAppDecodingStream_validateFile(
 		string $encrypted,

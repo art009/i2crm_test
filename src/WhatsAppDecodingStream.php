@@ -7,17 +7,15 @@ declare(strict_types=1);
 
 namespace art009\I2crmTest;
 
-use GuzzleHttp\Psr7\LimitStream;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
-use GuzzleHttp\Psr7;
+use art009\I2crmTest\ITypeContent;
 
-class WhatsAppDecodingStream implements StreamInterface
+class WhatsAppDecodingStream implements StreamInterface, ITypeContent
 {
-	const BLOCK_SIZE = 4; // 32 bits
-
 	use StreamDecoratorTrait;
+	use WhatsAppTrait;
 
 	/**
 	 * @var string
@@ -27,25 +25,13 @@ class WhatsAppDecodingStream implements StreamInterface
 	private $mediaKey;
 	private $mediaKeyExpanded;
 
-	const TYPE_CONTENT_IMAGE = 'IMAGE';
-	const TYPE_CONTENT_VIDEO = 'VIDEO';
-	const TYPE_CONTENT_AUDIO = 'AUDIO';
-	const TYPE_CONTENT_DOCUMENT = 'DOCUMENT';
-
-	public $type_salt = [
-		self::TYPE_CONTENT_IMAGE => 'WhatsApp Image Keys',
-		self::TYPE_CONTENT_VIDEO => 'WhatsApp Video Keys',
-		self::TYPE_CONTENT_AUDIO => 'WhatsApp Audio Keys',
-		self::TYPE_CONTENT_DOCUMENT => 'WhatsApp Document Keys',
-	];
-
 	// данные из ключа
 	private $iv;
 	private $cipherKey;
 	private $macKey;
 	private $refKey;
 
-	// данные по зашифроннаму файлу
+	// данные по зашифронному файлу
 	private $cipherText;
 	private $mac;
 
@@ -65,7 +51,8 @@ class WhatsAppDecodingStream implements StreamInterface
 		$this->mediaKey = $mediaKey;
 //		$this->mediaKeyEncode = base64_decode( $mediaKey);
 //      2. Expand it to 112 bytes using HKDF with SHA-256 and type-specific application info (see below). Call this value `mediaKeyExpanded`.
-		$this->mediaKeyExpanded = hash_hkdf('sha256', $this->mediaKey, 112, $this->type_salt[$media_type]);
+		$this->mediaKeyExpanded = hash_hkdf('sha256', $this->mediaKey, 112, $this->getTypesContent()[$media_type]);
+
 		/**
 		 * 3. Split `mediaKeyExpanded` into:
 			- `iv`: `mediaKeyExpanded[:16]`
